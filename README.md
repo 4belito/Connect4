@@ -13,6 +13,11 @@ This repository contains code for the Connect 4 game. It provides the interface 
 4. The objective of the game is to drop pieces such that and 4 of your pieces are connected horizintally, vertically, or diagonally first.
 5. If there are no more empty spots left, and no player has connected 4 of their pieces, the game is a draw.
 
+
+## Variations of the Game
+The board can be configured for any number of columns and rows, as well as the number of discs you have to connect to win the game. In addition, a cylinder option is available, connecting the left-hand side of the board to the right-hand side.
+
+
 ## Installing
 The code requires python=3.9 numpy. You can pip install or conda install these packages. It is recommended to use a virtual environment.
 
