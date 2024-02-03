@@ -16,6 +16,8 @@ COLUMNS = 7
 TIMEOUT_MOVE = 1
 TIMEOUT_SETUP = 1
 MAX_INVALID_MOVES = 0
+CONNECT_NUMBER=5
+CYLINDER=False
 timed_out = False 
 
 
@@ -44,17 +46,18 @@ def time_limit(seconds, msg=''):
 
 class Connect4Board():
     def __init__(
-        self, rows=ROWS, columns=COLUMNS, timeout_move=TIMEOUT_MOVE,
-        timeout_setup=TIMEOUT_SETUP, max_invalid_moves=MAX_INVALID_MOVES, 
-        deterministic: bool=True,       
-    ):
+        self, rows=ROWS, columns=COLUMNS,connect_number=CONNECT_NUMBER,cylinder=CYLINDER,
+        timeout_move=TIMEOUT_MOVE,timeout_setup=TIMEOUT_SETUP, max_invalid_moves=MAX_INVALID_MOVES,
+        deterministic: bool=True):
         """
         rows : int -- number of rows in the game
         columns : int -- number of columns in the game
         time_out_secs : float -- time in seconds after which other player is declared winner
         """
 
-        # collect max and min player vunetids for logging scores
+        assert CONNECT_NUMBER <= rows, 'The number of discs to connect has to be less than or equal to the number of rows.'
+        assert CONNECT_NUMBER <= columns, 'The number of discs to connect has to be less than or equal to the number of rows.'
+
         self.agents = {}
         self.rows = rows
         self.columns = columns
@@ -62,9 +65,10 @@ class Connect4Board():
         self.timeout_setup = timeout_setup
         self.max_invalid_moves = max_invalid_moves
         self.deterministic = deterministic
-
+        self.connect_number=connect_number
+        self.cylinder=cylinder
         self.reset_board()
-
+        
     def __str__(self) -> str:
         board = self._board.copy().astype(int)
         return np.array2string(board)
@@ -83,7 +87,7 @@ class Connect4Board():
             print(f'Could not load player {p_path} due to: {exc}')
             return -1
         player_cls = getattr(player_module, class_name)
-        player: Player = player_cls()
+        player: Player = player_cls(rows=self.rows, columns=self.columns)
         return player
     
     def reset_board(self):
@@ -98,55 +102,48 @@ class Connect4Board():
             is_valid = False
         return is_valid,board  
     
-    def check_row(self, vec):
-        count=0
-        for i in range(len(vec)):
-            if vec[i]==1:
-                count+=1
-            else:
-                count=0
-            if count==4:
-                vec[i-3:i+1]=2*np.ones(4, dtype=int)
-                return vec
-        return None
-    
+    def check_config(self, board,config):
+        b1,b2=board.shape
+        c1,c2=config.shape
+        for i in range(b1-c1+1):
+            for j in range(b2-c2+1):
+                if np.sum(board[i:i+c1,j:j+c2]*config)==self.connect_number:
+                    board[i:i+c1,j:j+c2][config==1]=2
+                    if self.cylinder:
+                        board[:,:self.connect_number-1][board[:,-self.connect_number+1:]==2]=2
+                        board=board[:,:-self.connect_number+1]
+                    return True,board
+        return False,board
+
     def check_if_winner(self, board):
+        if self.cylinder:
+            board=np.concatenate((board, board[:,:self.connect_number-1]),axis=1)
+
         #Horizontal checking
-        for row in range(self.rows):
-            row_end=self.check_row(board[row,:])
-            if row_end is not None:
-                board[row,:]=row_end
-                return board
-        #Vertical checking    
-        for column in range(self.columns):
-            row_end=self.check_row(board[:,column])
-            if row_end is not None:
-                board[:,column]=row_end
-                return board
+        config=np.ones((1,self.connect_number), dtype=int)
+        end,board=self.check_config(board,config)
+        if end:
+            return board
         
-        #Diagonal checking  
-        d_min=min(self.rows,self.columns)
-        d_max=max(self.rows,self.columns)
-        diag_len=[i for i in range(4,d_min)]+(d_max-d_min+1)*[d_min]+[i for i in range(d_min-1,3,-1)]
-        for diag in range(3,self.rows+self.columns-4):
-            #main diagonals(decreasing from left to right)
-            row=max(0,self.rows-1-diag)
-            column=max(0,diag-self.rows+1)
-            diagonal=[board[row+i][column+i] for i in range(diag_len[diag-3])]
-            row_end=self.check_row(diagonal)
-            if row_end is not None:
-                for i in range(diag_len[diag-3]):
-                    board[row+i][column+i]=row_end[i]
-                return board
-            # anti-diagonals(increasing from left to right)
-            row=min(diag,self.rows-1)
-            diagonal=[board[row-i][column+i] for i in range(diag_len[diag-3])]
-            row_end=self.check_row(diagonal)
-            if row_end is not None:
-                for i in range(diag_len[diag-3]):
-                    board[row-i][column+i]=row_end[i]
-                return board
-        return None 
+        #Vertical checking
+        config=np.ones((self.connect_number,1), dtype=int)
+        end,board=self.check_config(board,config) 
+        if end:
+            return board
+        
+        #Diagonal checking
+        config=np.eye(self.connect_number,dtype=int)
+        end,board=self.check_config(board,config) 
+        if end:
+            return board
+        
+        #Diagonal checking
+        config=np.flipud(np.eye(self.connect_number,dtype=int))
+        end,board=self.check_config(board,config) 
+        if end:
+            return board
+        
+        return None
 
     def play(self, player1, player2):
         global timed_out
@@ -212,12 +209,12 @@ class Connect4Board():
                 if not np.sum(p1_board==0):
                     winner, reason = None, 'drawn'
                     break
-            
-            if timed_out == True:
-                winner, reason = p2, 'Move timeout'
-                break 
+                
+                if timed_out == True:
+                    winner, reason = p2, 'Move timeout'
+                    break 
 
-            p2_board = self._board * p2piece
+                p2_board = self._board * p2piece
  
             with time_limit(self.timeout_setup, 'sleep'):
                 move = p2_cls.play(p2_board.copy())
@@ -239,9 +236,9 @@ class Connect4Board():
                 if not np.sum(p1_board==0):
                     winner, reason = None, 'drawn'
                     break
-            
-            if timed_out == True:
-                winner, reason = p1, 'Move timeout'
-                break 
+                
+                if timed_out == True:
+                    winner, reason = p1, 'Move timeout'
+                    break 
         
         return winner, reason, moves

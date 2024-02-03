@@ -1,13 +1,18 @@
 
 import numpy as np
-rows, cols = 6, 7
 
 class Player:
     '''
     Randomly drop the disc into any column on the board that is not full.
     '''
+
+    def __init__(self, rows, columns):
+        self.rows=rows
+        self.cols=columns
+
+
     def setup(self):
-        self.moves=np.arange(cols)
+        self.moves=np.arange(self.cols)
 
     def play(self, board: np.ndarray) -> int:
         valid_moves = self.valid_moves(board)

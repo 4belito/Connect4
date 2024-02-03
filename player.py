@@ -1,9 +1,12 @@
 import numpy as np
 
-
+rows, cols = 7, 8
 
 class Player:
     
+    def __init__(self, rows=rows, columns=cols):
+        self.rows=rows
+        self.cols=columns
 
     def setup(self):
         """
