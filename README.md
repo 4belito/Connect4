@@ -15,7 +15,7 @@ This repository contains code for the Connect 4 game. It provides the interface 
 
 
 ## Variations of the Game
-The board can be configured for any number of columns and rows, as well as the number of discs you have to connect to win the game. In addition, a cylinder option is available, connecting the left-hand side of the board to the right-hand side.
+The board can be configured for any number of columns and rows, as well as the number of disks you have to connect to win the game. In addition, a cylinder option is available, connecting the left-hand side of the board to the right-hand side.
 
 
 ## Installing
