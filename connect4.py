@@ -204,7 +204,7 @@ class Connect4Board():
 
                 board_end=self.check_if_winner(p1_board)
                 if board_end is not None:
-                    winner, reason,self._board = p1, 'Connect 4!', board_end*p1piece
+                    winner, reason,self._board = p1, f'Connect {self.connect_number}!', board_end*p1piece
                     break
                 if not np.sum(p1_board==0):
                     winner, reason = None, 'drawn'
@@ -231,7 +231,7 @@ class Connect4Board():
                 
                 board_end=self.check_if_winner(p2_board)           
                 if board_end is not None:
-                    winner, reason,self._board = p2, 'Connect 4!', board_end*p2piece
+                    winner, reason,self._board = p2, f'Connect {self.connect_number}!', board_end*p2piece
                     break
                 if not np.sum(p1_board==0):
                     winner, reason = None, 'drawn'
