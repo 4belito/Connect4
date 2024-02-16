@@ -210,11 +210,11 @@ class Connect4Board():
                     winner, reason = None, 'drawn'
                     break
                 
-                if timed_out == True:
-                    winner, reason = p2, 'Move timeout'
-                    break 
+            if timed_out == True:
+                winner, reason = p2, 'Move timeout'
+                break 
 
-                p2_board = self._board * p2piece
+            p2_board = self._board * p2piece
  
             with time_limit(self.timeout_setup, 'sleep'):
                 move = p2_cls.play(p2_board.copy())
@@ -237,8 +237,8 @@ class Connect4Board():
                     winner, reason = None, 'drawn'
                     break
                 
-                if timed_out == True:
-                    winner, reason = p1, 'Move timeout'
-                    break 
+            if timed_out == True:
+                winner, reason = p1, 'Move timeout'
+                break 
         
         return winner, reason, moves
