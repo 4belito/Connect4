@@ -189,7 +189,7 @@ class Connect4Board():
             p1_board = self._board * p1piece
         
 
-            with time_limit(self.timeout_setup, 'sleep'):
+            with time_limit(self.timeout_move, 'sleep'):
                 move = p1_cls.play(p1_board.copy())
                 
                 is_valid, p1_board = self.process_move(move, p1_board.copy())
@@ -216,7 +216,7 @@ class Connect4Board():
 
             p2_board = self._board * p2piece
  
-            with time_limit(self.timeout_setup, 'sleep'):
+            with time_limit(self.timeout_move, 'sleep'):
                 move = p2_cls.play(p2_board.copy())
 
                 is_valid, p2_board = self.process_move(move, p2_board.copy())

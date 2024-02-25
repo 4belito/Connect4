@@ -7,6 +7,7 @@ from player import Player
 
 rows, cols = 7, 8
 
+
 class Random(Player):
     '''
     Drop the disc randomly on any of the columns of the board
