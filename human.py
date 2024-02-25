@@ -13,11 +13,10 @@ class Player:
 
 
     def setup(self):
-        print('done')
         pass
 
     def play(self, board: np.ndarray) -> int:
-        print(board)
+        print(f'board:\n{board}')
         sys.stdout.flush()
         return int(input(f'Colum Move[0-{self.cols-1}]: '))
     
