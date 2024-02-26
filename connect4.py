@@ -104,7 +104,7 @@ class Connect4Board():
     
     def process_move(self, column, board):
         is_valid = False
-        if isinstance(column, (int,np.int32)) and 0 <= column < self.cols:
+        if isinstance(column, (int,np.int32,np.int64)) and 0 <= column < self.cols:
             n_spots=sum(board[:,column]==0)
             if n_spots:
                 board[n_spots-1,column]=1
@@ -201,7 +201,7 @@ class Connect4Board():
                 is_valid, p1_board = self.process_move(self.move, p1_board.copy())
             except Exception as exc:
                 is_valid=False
-                print(f"Error {exc} have occurred with player {p1}:")
+                print(f"Error {exc} has occurred with player {p1}:")
             if  is_valid:
                 self._board = p1_board 
                 moves.append(self.move)
@@ -216,7 +216,7 @@ class Connect4Board():
                 winner, reason,self._board = p1, f'Connect {self.connect_number}!', board_end
                 break
             if not np.sum(self._board==0):
-                winner, reason = None, 'drawn'
+                winner, reason = None, 'draw'
                 break
                 
             if timed_out == True:
@@ -232,7 +232,7 @@ class Connect4Board():
                 is_valid, p2_board = self.process_move(self.move, p2_board.copy())
             except Exception as exc:
                 is_valid=False
-                print(f"Error {exc} have occurred with player {p2}:")
+                print(f"Error {exc} has occurred with player {p2}:")
             if is_valid:
                 self._board = p2_board * (-1)
                 moves.append(self.move)
@@ -247,7 +247,7 @@ class Connect4Board():
                 winner, reason,self._board = p2, f'Connect {self.connect_number}!', board_end*(-1)
                 break
             if not np.sum(self._board==0):
-                winner, reason = None, 'drawn'
+                winner, reason = None, 'draw'
                 break
                 
             if timed_out == True:
