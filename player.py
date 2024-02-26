@@ -1,14 +1,29 @@
 import numpy as np
 
-rows, cols = 7, 8
+ROWS = 6
+COLS = 7
+
+TIMEOUT_MOVE = 1
+TIMEOUT_SETUP = 1
+MAX_INVALID_MOVES = 0
+CONNECT_NUMBER=5
+CYLINDER=False
+timed_out = False 
 
 class Player:
     
-    def __init__(self, rows=rows, columns=cols):
-        self.rows=rows
-        self.cols=columns
+    def __init__(self, rows, cols, connect_number, 
+                 timeout_setup, timeout_move, max_invalid_moves, 
+                 cylinder):
+        self.rows = rows
+        self.cols = cols
+        self.connect_number = connect_number
+        self.timeout_setup = timeout_setup
+        self.timeout_move = timeout_move
+        self.max_invalid_moves = max_invalid_moves
+        self.cylinder = cylinder
 
-    def setup(self):
+    def setup(self,piece_color):
         """
         This method will be called once at the beginning of the game so the player
         can conduct any setup before the move timer begins. The setup method is
