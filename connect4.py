@@ -75,6 +75,7 @@ class Connect4Board():
         self.connect_number=connect_number
         self.cylinder=cylinder
         self.reset_board()
+
         
     def __str__(self) -> str:
         board = self._board.copy().astype(int)
@@ -98,15 +99,16 @@ class Connect4Board():
         return player
     
     def reset_board(self):
+        self.move=None
         self._board =  np.zeros((self.rows,self.cols), dtype=int)
     
     def process_move(self, column, board):
-        n_spots=sum(board[:,column]==0)
-        if n_spots:
-            board[n_spots-1,column]=1
-            is_valid = True
-        else: 
-            is_valid = False
+        is_valid = False
+        if isinstance(column, (int,np.int32)) and 0 <= column < self.cols:
+            n_spots=sum(board[:,column]==0)
+            if n_spots:
+                board[n_spots-1,column]=1
+                is_valid = True            
         return is_valid,board  
     
     def check_config(self, board,config):
@@ -192,30 +194,30 @@ class Connect4Board():
         
         p1_invalid, p2_invalid = 0, 0
         while True:
+            p1_board = self._board            
+            try:
+                with time_limit(self.timeout_move, 'sleep'):
+                    self.move = p1_cls.play(p1_board.copy())
+                is_valid, p1_board = self.process_move(self.move, p1_board.copy())
+            except Exception as exc:
+                is_valid=False
+                print(f"Error {exc} have occurred with player {p1}:")
+            if  is_valid:
+                self._board = p1_board 
+                moves.append(self.move)
+            else:
+                p1_invalid += 1
+                if p1_invalid >= self.max_invalid_moves:
+                    winner, reason = p2, f'Invalid moves exceeded {self.max_invalid_moves}'
+                    break 
 
-            p1_board = self._board
-        
-
-            with time_limit(self.timeout_move, 'sleep'):
-                move = p1_cls.play(p1_board.copy())
-                
-                is_valid, p1_board = self.process_move(move, p1_board.copy())
-                if  is_valid:
-                    self._board = p1_board 
-                    moves.append(move)
-                else:
-                    p1_invalid += 1
-                    if p1_invalid >= self.max_invalid_moves:
-                        winner, reason = p2, f'Invalid moves exceeded {self.max_invalid_moves}'
-                        break 
-
-                board_end=self.check_if_winner(p1_board)
-                if board_end is not None:
-                    winner, reason,self._board = p1, f'Connect {self.connect_number}!', board_end
-                    break
-                if not np.sum(p1_board==0):
-                    winner, reason = None, 'drawn'
-                    break
+            board_end=self.check_if_winner(p1_board)
+            if board_end is not None:
+                winner, reason,self._board = p1, f'Connect {self.connect_number}!', board_end
+                break
+            if not np.sum(self._board==0):
+                winner, reason = None, 'drawn'
+                break
                 
             if timed_out == True:
                 winner, reason = p2, 'Move timeout'
@@ -223,26 +225,30 @@ class Connect4Board():
 
             p2_board = self._board * (-1)
  
-            with time_limit(self.timeout_move, 'sleep'):
-                move = p2_cls.play(p2_board.copy())
-
-                is_valid, p2_board = self.process_move(move, p2_board.copy())
-                if is_valid:
-                    self._board = p2_board * (-1)
-                    moves.append(move)
-                else:
-                    p2_invalid += 1
-                    if p2_invalid >= self.max_invalid_moves:
-                        winner, reason = p1, f'Invalid moves exceeded {self.max_invalid_moves}' 
-                        break 
+            
+            try:
+                with time_limit(self.timeout_move, 'sleep'):
+                    self.move = p2_cls.play(p2_board.copy())
+                is_valid, p2_board = self.process_move(self.move, p2_board.copy())
+            except Exception as exc:
+                is_valid=False
+                print(f"Error {exc} have occurred with player {p2}:")
+            if is_valid:
+                self._board = p2_board * (-1)
+                moves.append(self.move)
+            else:
+                p2_invalid += 1
+                if p2_invalid >= self.max_invalid_moves:
+                    winner, reason = p1, f'Invalid moves exceeded {self.max_invalid_moves}' 
+                    break 
                 
-                board_end=self.check_if_winner(p2_board)           
-                if board_end is not None:
-                    winner, reason,self._board = p2, f'Connect {self.connect_number}!', board_end*(-1)
-                    break
-                if not np.sum(p1_board==0):
-                    winner, reason = None, 'drawn'
-                    break
+            board_end=self.check_if_winner(p2_board)           
+            if board_end is not None:
+                winner, reason,self._board = p2, f'Connect {self.connect_number}!', board_end*(-1)
+                break
+            if not np.sum(self._board==0):
+                winner, reason = None, 'drawn'
+                break
                 
             if timed_out == True:
                 winner, reason = p1, 'Move timeout'
